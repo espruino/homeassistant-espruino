@@ -57,6 +57,7 @@ class EspruinoPanel extends HTMLElement {
     this.style.left = "0";
     this.style.right = "0";
     this.style.bottom = "0";
+    this.style.inset = "unset";
 
     const iframe = document.createElement("iframe");
     iframe.src = "https://www.espruino.com/ide/";
