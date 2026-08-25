@@ -79,6 +79,9 @@ class EspruinoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
+            if address == "manual":
+                return await self.async_step_manual()
+
             await self.async_set_unique_id(format_mac(address), raise_on_progress=False)
             self._abort_if_unique_id_configured()
 
@@ -95,30 +98,47 @@ class EspruinoConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        discovered_devices: dict[str, str] = {}
+        current_addresses = self._async_current_ids()
+        espruino_devices: dict[str, str] = {}
+        other_devices: dict[str, str] = {}
+
         for service_info in async_discovered_service_info(self.hass):
+            if format_mac(service_info.address) in current_addresses:
+                continue
+
             if MANUFACTURER_ID in service_info.manufacturer_data:
                 name = (
                     service_info.name or f"Espruino {format_mac(service_info.address)}"
                 )
-                discovered_devices[service_info.address] = (
+                espruino_devices[service_info.address] = (
+                    f"{name} ({service_info.address})"
+                )
+            else:
+                name = (
+                    service_info.name
+                    or f"Bluetooth device {format_mac(service_info.address)}"
+                )
+                other_devices[service_info.address] = (
                     f"{name} ({service_info.address})"
                 )
 
-        current_addresses = self._async_current_ids()
-        discovered_devices = {
-            address: name
-            for address, name in discovered_devices.items()
-            if format_mac(address) not in current_addresses
-        }
-
-        if not discovered_devices:
-            return self.async_abort(reason="no_devices_found")
-
-        options = [
+        options: list[SelectOptionDict] = [
             SelectOptionDict(value=address, label=label)
-            for address, label in discovered_devices.items()
+            for address, label in espruino_devices.items()
+        ] + [
+            SelectOptionDict(value=address, label=label)
+            for address, label in other_devices.items()
         ]
+
+        if not options:
+            return await self.async_step_manual()
+
+        options.append(
+            SelectOptionDict(
+                value="manual",
+                label="Enter MAC address manually",
+            )
+        )
 
         return self.async_show_form(
             step_id="user",
@@ -134,3 +154,42 @@ class EspruinoConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle manual Bluetooth address input."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            address = user_input[CONF_ADDRESS].strip()
+            formatted_mac = format_mac(address)
+            if len(formatted_mac) != 17 or formatted_mac.count(":") != 5:
+                errors[CONF_ADDRESS] = "invalid_address"
+            else:
+                await self.async_set_unique_id(formatted_mac, raise_on_progress=False)
+                self._abort_if_unique_id_configured()
+
+                name = f"Espruino {formatted_mac}"
+                for service_info in async_discovered_service_info(self.hass):
+                    if service_info.address.upper() == address.upper():
+                        name = service_info.name or name
+                        break
+
+                return self.async_create_entry(
+                    title=name,
+                    data={
+                        CONF_ADDRESS: address,
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="manual",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ADDRESS): str,
+                }
+            ),
+            errors=errors,
+        )
+

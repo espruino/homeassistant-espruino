@@ -60,20 +60,19 @@ class EspruinoConnectionManager:
                 "connected": self.is_connected(address),
             }
 
-        # Add discovered devices matching manufacturer ID
+        # Add discovered devices matching manufacturer ID, and update RSSI for all discovered devices
         for service_info in async_discovered_service_info(self.hass):
-            if MANUFACTURER_ID in service_info.manufacturer_data:
-                addr = service_info.address.upper()
+            addr = service_info.address.upper()
+            if addr in devices:
+                devices[addr]["rssi"] = service_info.rssi
+            elif MANUFACTURER_ID in service_info.manufacturer_data:
                 name = service_info.name or f"Espruino {service_info.address}"
-                if addr in devices:
-                    devices[addr]["rssi"] = service_info.rssi
-                else:
-                    devices[addr] = {
-                        "address": service_info.address,
-                        "name": name,
-                        "rssi": service_info.rssi,
-                        "connected": self.is_connected(service_info.address),
-                    }
+                devices[addr] = {
+                    "address": service_info.address,
+                    "name": name,
+                    "rssi": service_info.rssi,
+                    "connected": self.is_connected(service_info.address),
+                }
 
         return list(devices.values())
 
