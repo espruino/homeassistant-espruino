@@ -216,3 +216,12 @@ class EspruinoConnectionManager:
             raise HomeAssistantError(
                 f"Failed to write to Espruino device {address}: {err}"
             ) from err
+
+    async def async_send_uart(self, address: str, data: bytes) -> None:
+        """Connect, write data to Nordic UART RX, and disconnect."""
+        await self.async_connect(address)
+        try:
+            await self.async_write(address, data)
+        finally:
+            await self.async_disconnect(address)
+

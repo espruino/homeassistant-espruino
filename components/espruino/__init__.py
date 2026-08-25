@@ -16,7 +16,7 @@ from .websocket_api import async_register_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = []
+PLATFORMS: list[Platform] = [Platform.TEXT]
 
 type EspruinoConfigEntry = ConfigEntry[EspruinoData]
 
@@ -55,12 +55,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: EspruinoConfigEntry) -> 
     )
 
     entry.runtime_data = hass.data[DOMAIN]
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EspruinoConfigEntry) -> bool:
     """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     address: str = entry.data[CONF_ADDRESS]
     manager = entry.runtime_data.manager
     await manager.async_disconnect(address)
-    return True
+    return unload_ok
+
