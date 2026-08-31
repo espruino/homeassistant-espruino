@@ -51,12 +51,12 @@ class EspruinoPanel extends HTMLElement {
     if (this._iframe) return;
     this.style.display = "block";
     this.style.width = "100%";
-    this.style.height = "100%";
-    this.style.position = "absolute";
-    this.style.top = "0";
-    this.style.left = "0";
-    this.style.right = "0";
-    this.style.bottom = "0";
+    this.style.height = "100vh";
+    this.style.position = "relative";
+    this.style.top = "0px";
+    this.style.left = "0px";
+    this.style.right = "0px";
+    this.style.bottom = "0px";
     this.style.inset = "unset";
 
     const iframe = document.createElement("iframe");
