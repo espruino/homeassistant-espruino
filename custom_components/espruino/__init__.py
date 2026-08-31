@@ -7,6 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .connection import EspruinoConnectionManager
@@ -16,6 +17,7 @@ from .websocket_api import async_register_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema("espruino")
 PLATFORMS: list[Platform] = [Platform.TEXT]
 
 type EspruinoConfigEntry = ConfigEntry[EspruinoData]
