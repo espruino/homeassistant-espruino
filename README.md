@@ -12,7 +12,7 @@ Ensure that your Home Assistant installation has the ability to scan for bluetoo
 
 **NOTE:** We're [waiting to be submitted to HACS](https://github.com/hacs/default/pull/10513) and there appears to be a long waiting list. Until submission, only `Manual Installation` will work. 
 
-[![](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=espruino&repository=Espruino&category=Integration)
+[![](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=espruino&repository=homeassistant-espruino&category=Integration)
 
 Via [HACS](https://hacs.xyz/) or manually copy `espruino` folder from [latest release](https://github.com/espruino/homeassistant-espruino) to `custom_components` folder in your config folder.
 
