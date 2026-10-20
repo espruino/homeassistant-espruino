@@ -25,6 +25,6 @@ async def async_register_panel(hass: HomeAssistant) -> None:
         sidebar_icon="mdi:code-braces",
         module_url=f"{URL_BASE}/espruino-panel.js",
         embed_iframe=False,
-        require_admin=False,
+        require_admin=True,
         config_panel_domain=DOMAIN,
     )

@@ -21,6 +21,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_subscribe)
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "espruino/devices",
@@ -35,9 +36,11 @@ def ws_devices(
     """Handle get Espruino devices."""
     manager = hass.data[DOMAIN].manager
     devices = manager.get_discovered_devices()
+
     connection.send_result(msg["id"], devices)
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "espruino/connect",
@@ -63,6 +66,7 @@ async def ws_connect(
         )
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "espruino/disconnect",
@@ -88,6 +92,7 @@ async def ws_disconnect(
         )
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "espruino/write",
@@ -115,6 +120,7 @@ async def ws_write(
         )
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "espruino/subscribe",
