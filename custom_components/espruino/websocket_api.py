@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
@@ -33,9 +34,15 @@ def ws_devices(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Handle get Espruino devices."""
+    """Get devices that we're allowed to connect to"""
     manager = hass.data[DOMAIN].manager
-    devices = manager.get_discovered_devices()
+    config_entries = hass.config_entries.async_entries(DOMAIN)
+    discovered_devices = manager.get_discovered_devices()
+
+    devices = [ # Filter to show only devices added to this integration
+        device for device in discovered_devices
+        if any(entry.data.get(CONF_ADDRESS) == device.get("address") for entry in config_entries)
+    ]
 
     connection.send_result(msg["id"], devices)
 
@@ -55,7 +62,10 @@ async def ws_connect(
 ) -> None:
     """Handle connect to Espruino device."""
     manager = hass.data[DOMAIN].manager
+    config_entries = hass.config_entries.async_entries(DOMAIN)
     try:
+        if not any(entry.data.get("address") == msg["address"] for entry in config_entries):
+            raise HomeAssistantError(msg["address"]+" has not been added to the Espruino Integration")
         await manager.async_connect(msg["address"])
         connection.send_result(msg["id"], {"connected": True})
     except HomeAssistantError as err:
@@ -108,8 +118,11 @@ async def ws_write(
 ) -> None:
     """Handle write data to Espruino device."""
     manager = hass.data[DOMAIN].manager
+    config_entries = hass.config_entries.async_entries(DOMAIN)
     raw_data = msg["data"].encode("latin1", errors="replace")
     try:
+        if not any(entry.data.get("address") == msg["address"] for entry in config_entries):
+            raise HomeAssistantError(msg["address"]+" has not been added to the Espruino Integration")
         await manager.async_write(msg["address"], raw_data)
         connection.send_result(msg["id"], {"written": True})
     except HomeAssistantError as err:
