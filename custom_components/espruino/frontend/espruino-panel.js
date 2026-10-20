@@ -60,11 +60,11 @@ class EspruinoPanel extends HTMLElement {
     this.style.inset = "unset";
 
     const iframe = document.createElement("iframe");
-    iframe.src = "https://www.espruino.com/ide/";
+    iframe.src = "https://www.espruino.com/ide/?noemulator";
     iframe.style.width = "100%";
     iframe.style.height = "100%";
     iframe.style.border = "none";
-    iframe.allow = "usb; bluetooth";
+    // iframe.allow = "usb; serial; bluetooth"; // we don't need the IDE here to be able to access things directly
     this.appendChild(iframe);
     this._iframe = iframe;
   }
@@ -90,10 +90,13 @@ class EspruinoPanel extends HTMLElement {
 
   async _onMessage(e) {
     const event = e.data;
-    if (!event || typeof event !== "object" || event.from !== "ide") {
+    // Filter out events not meant for us
+    if (!event || typeof event !== "object" ||
+        event.from !== "ide" ||
+        e.source !== this._iframe.contentWindow)
       return;
-    }
 
+    // Handle events from the IDE to Home Assistant
     switch (event.type) {
       case "init":
         this._postToIde({ type: "initialised" });
